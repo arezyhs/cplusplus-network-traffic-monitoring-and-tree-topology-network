@@ -20,17 +20,17 @@ struct Log {
 };
 
 // menghitung penggunaan bandwidth
-struct BandwidthUsage {
+struct penggunaanBandwidth {
     string ip_address;
     int bytes_sent;
     int bytes_received;
-    BandwidthUsage(const string& ip) : ip_address(ip), bytes_sent(0), bytes_received(0) {}
+    penggunaanBandwidth(const string& ip) : ip_address(ip), bytes_sent(0), bytes_received(0) {}
 };
 
 // menyimpan penggunaan bandwidth
 struct BandwidthTable {
     static const int TABLE_SIZE = 10;
-    BandwidthUsage* table[TABLE_SIZE];
+    penggunaanBandwidth* table[TABLE_SIZE];
 
     BandwidthTable() {
         for (int i = 0; i < TABLE_SIZE; ++i) {
@@ -49,7 +49,7 @@ struct BandwidthTable {
     void addUsage(const string& ip, int bytes, bool isSent) {
         int index = hashFunction(ip);
         if (table[index] == nullptr) {
-            table[index] = new BandwidthUsage(ip);
+            table[index] = new penggunaanBandwidth(ip);
         }
         if (isSent) {
             table[index]->bytes_sent += bytes;
@@ -58,7 +58,7 @@ struct BandwidthTable {
         }
     }
 
-    void displayUsage() {
+    void displayPenggunaanBandwidth() {
         cout << "Bandwidth Usage:" << endl;
         for (int i = 0; i < TABLE_SIZE; ++i) {
             if (table[i] != nullptr) {
@@ -103,7 +103,7 @@ struct PC {
         : device_info(new Device(ip, "active", "PC", gw)), username(user), password(pass), receivedPackets(nullptr), next(nullptr), blocked_ips(nullptr) {}
 
     // Fungsi untuk menerima paket
-    void receivePacket(Packet* packet) {
+    void menerimaPacket(Packet* packet) {
         if (device_info->status == "inactive" || isBlocked(packet->source_ip)) {
             cout << "PC dengan IP " << device_info->ip_address << " sedang mati, gateway tidak sesuai, atau IP diblok, tidak dapat menerima paket." << endl;
             return;
@@ -117,40 +117,38 @@ struct PC {
     }
 
     // Fungsi menampilkan paket yang diterima 
-    void displayReceivedPacketsRecursive(Packet* packet) { // rekursif di sini
+    void displayPaketYangDiterimaRecursive(Packet* packet) { // rekursif di sini
         if (packet == nullptr) {
             return;
         }
         cout << "Paket dari " << packet->source_ip << " ke " << packet->destination_ip << ": " << packet->message << endl;
-        displayReceivedPacketsRecursive(packet->next);
+        displayPaketYangDiterimaRecursive(packet->next);
     }
 
-    void displayReceivedPackets() {
+    void displayPaketYangDiterima() {
         if (!receivedPackets) {
             cout << "Tidak ada paket!" << endl;
         } else {
-            displayReceivedPacketsRecursive(receivedPackets); // rekursif di sini
+            displayPaketYangDiterimaRecursive(receivedPackets); // rekursif di sini
         }
     }
 
     // Fungsi untuk mematikan perangkat
-    void shutdownDevice() {
+    void matikanPerangkat() {
         device_info->status = "inactive";
     }
 
     // Fungsi untuk menghidupkan perangkat
-    void restartDevice() {
+    void mulaiUlangPerangkat() {
         device_info->status = "active";
     }
 
     // Konsep sorting mengurutkan paket berdasarkan IP sumber pake bubble sort.
-    void sortPacketsByIP() {
+    void urutkanPacketsBerdasarkanIP() {
         if (!receivedPackets) return;
-
         bool swapped;
         Packet* ptr1;
         Packet* lptr = nullptr;
-
         do {
             swapped = false;
             ptr1 = receivedPackets;
@@ -209,7 +207,7 @@ struct PC {
     }
 
     // Fungsi untuk menampilkan IP address yang diblokir
-    void displayBlockedIPs() {
+    void displayIPAddressBlokiran() {
         PC* current = blocked_ips;
         if (current == nullptr) {
             cout << "Tidak ada IP yang diblokir!" << endl;
@@ -228,6 +226,7 @@ struct Switch {
     PC* users[3];
     Switch* next;
     int switchIndex;
+    
     Switch(int index, const string& ip) 
         : device_info(new Device(ip, "active", "Switch", "192.168.1.1")), next(nullptr), switchIndex(index) {
         for (int i = 0; i < 3; ++i) {
@@ -235,20 +234,20 @@ struct Switch {
         }
     }
 
-    void shutdownDevice() {
+    void matikanPerangkat() {
         device_info->status = "inactive";
         for (int i = 0; i < 3; ++i) {
             if (users[i] != nullptr) {
-                users[i]->shutdownDevice();
+                users[i]->matikanPerangkat();
             }
         }
     }
 
-    void restartDevice() {
+    void mulaiUlangPerangkat() {
         device_info->status = "active";
         for (int i = 0; i < 3; ++i) {
             if (users[i] != nullptr) {
-                users[i]->restartDevice();
+                users[i]->mulaiUlangPerangkat();
             }
         }
     }
@@ -259,26 +258,27 @@ struct Router {
     Device* device_info;
     Switch* switches[2];
     string ip_address;
+
     Router(const string& ip) : device_info(new Device(ip, "active", "Router", ip)), ip_address(ip) {
         for (int i = 0; i < 2; ++i) {
             switches[i] = nullptr;
         }
     }
 
-    void shutdownDevice() {
+    void matikanPerangkat() {
         device_info->status = "inactive";
         for (int i = 0; i < 2; ++i) {
             if (switches[i] != nullptr) {
-                switches[i]->shutdownDevice();
+                switches[i]->matikanPerangkat();
             }
         }
     }
 
-    void restartDevice() {
+    void mulaiUlangPerangkat() {
         device_info->status = "active";
         for (int i = 0; i < 2; ++i) {
             if (switches[i] != nullptr) {
-                switches[i]->restartDevice();
+                switches[i]->mulaiUlangPerangkat();
             }
         }
     }
@@ -346,7 +346,7 @@ void displayLogsFromFile() {
     }
 }
 
-// Struktur Node untuk graf
+// Struktur tree node
 struct TreeNode {
     Device* device_info;
     TreeNode* children[5];
@@ -364,7 +364,7 @@ struct TreeNode {
     }
 };
 
-// Struktur Stack untuk menyimpan log
+// konsep struct Stack untuk menyimpan log
 struct Stack {
     Log* top;
     Stack() : top(nullptr) {}
@@ -465,7 +465,6 @@ struct HashTable {
         } else {
             prev->next = temp->next;
         }
-
         delete temp;
     }
 
@@ -478,7 +477,7 @@ struct HashTable {
         return temp == nullptr ? nullptr : temp->pc;
     }
 
-    HashNode* searchUser(const string& user) {
+    HashNode* cariUser(const string& user) {
         for (int i = 0; i < TABLE_SIZE; ++i) {
             HashNode* temp = table[i];
             while (temp != nullptr) {
@@ -510,22 +509,22 @@ struct HashTable {
     }
 };
 
-// Struktur untuk adjacency list node
-struct AdjacencyListNode {
+// struktur untuk konsep graf adjacency list node
+struct userPCIPListNode {
     string ip;
     string device_type;
     string user;
-    AdjacencyListNode* next;
-    AdjacencyListNode(const string& ip, const string& type, const string& user = "")
+    userPCIPListNode* next;
+    userPCIPListNode(const string& ip, const string& type, const string& user = "")
         : ip(ip), device_type(type), user(user), next(nullptr) {}
 };
 
-// Struktur untuk adjacency list
-struct AdjacencyList {
+// Struktur untuk konsep graf adjaceny list
+struct userPCIPList {
     static const int TABLE_SIZE = 10;
-    AdjacencyListNode* table[TABLE_SIZE];
+    userPCIPListNode* table[TABLE_SIZE];
 
-    AdjacencyList() {
+    userPCIPList() {
         for (int i = 0; i < TABLE_SIZE; ++i) {
             table[i] = nullptr;
         }
@@ -541,14 +540,15 @@ struct AdjacencyList {
 
     void addEdge(const string& src, const string& dest, const string& type, const string& user = "") {
         int index = hashFunction(src);
-        AdjacencyListNode* newNode = new AdjacencyListNode(dest, type, user);
+        userPCIPListNode* newNode = new userPCIPListNode(dest, type, user);
         newNode->next = table[index];
         table[index] = newNode;
     }
-    void displayAdjacencyList() {
+    // tampilkan adjencylist
+    void ipUserTerhubung() {
         for (int i = 0; i < TABLE_SIZE; ++i) {
             if (table[i] != nullptr) {
-                AdjacencyListNode* temp = table[i];
+                userPCIPListNode* temp = table[i];
                 cout << "Perangkat dengan IP: " << i << ":\n";
                 while (temp != nullptr) {
                     cout << "  IP: " << temp->ip << " | Type: " << temp->device_type;
@@ -565,7 +565,7 @@ struct AdjacencyList {
 };
 
 // menyambungkan PC ke slot switch
-void addPC(Switch* sw, int index, const string& ip_address, const string& username, const string& password, const string& gateway, const string& router_gateway, Stack& logStack, HashTable& hashTable, AdjacencyList& adjList) {
+void tambahPC(Switch* sw, int index, const string& ip_address, const string& username, const string& password, const string& gateway, const string& router_gateway, Stack& logStack, HashTable& hashTable, userPCIPList& adjList) {
     PC* pc = new PC(ip_address, username, password, gateway);
     if (gateway != router_gateway) {
         pc->device_info->status = "inactive";
@@ -581,17 +581,11 @@ void addPC(Switch* sw, int index, const string& ip_address, const string& userna
         logStack.push("Gagal menyambungkan PC dengan IP " + ip_address + " ke Switch " + to_string(sw->switchIndex) + ". IP address sudah digunakan.");
         return;
     }
-
     sw->users[index] = pc;
-
     // mendata ke hash table
     hashTable.insert(ip_address, pc, username, password, false);
-
     // tambahkan edge ke adjacency list
     adjList.addEdge(sw->device_info->ip_address, ip_address, "PC", username);
-
-    // logging
-    // logStack.push("Perangkat PC dengan IP " + ip_address + " terhubung ke Switch " + to_string(sw->switchIndex));
 }
 
 // Fungsi untuk memutuskan PC dari switch
@@ -612,7 +606,7 @@ void removePC(Switch* sw, int index, Stack& logStack, HashTable& hashTable) {
 }
 
 // Fungsi untuk menambahkan switch ke router
-void addSwitch(Router* router, int index, const string& ip, Stack& logStack) {
+void tambahSwitch(Router* router, int index, const string& ip, Stack& logStack) {
     Switch* sw = new Switch(index + 1, ip);
     router->switches[index] = sw;
     
@@ -672,7 +666,7 @@ Log* reverseStack(Log* top) {
 }
 
 // Fungsi untuk menampilkan log dari stack
-void displayLogsStack(Stack& logStack) {
+void displayLogsJaringan(Stack& logStack) {
     Log* reversedTop = reverseStack(logStack.top);
     Log* temp = reversedTop;
     cout << "Logs (Runtime):\n";
@@ -684,7 +678,7 @@ void displayLogsStack(Stack& logStack) {
 }
 
 // Konsep searching PC berdasarkan IP address yang terdaftar di jaringan
-PC* findPC(Router* router, const string& ip_address, int& switchIndex, HashTable& hashTable) { // searching di sini
+PC* cariPerangkatPC(Router* router, const string& ip_address, int& switchIndex, HashTable& hashTable) { // searching di sini
     PC* pc = hashTable.search(ip_address);
     if (pc != nullptr) {
         for (int i = 0; 0 < 2; ++i) {
@@ -700,7 +694,7 @@ PC* findPC(Router* router, const string& ip_address, int& switchIndex, HashTable
 }
 
 // Fungsi untuk mencari informasi IP dan memeriksa apakah itu router atau PC
-void searchIP(Router* router, HashTable& hashTable) {
+void cariIP(Router* router, HashTable& hashTable) {
     string ip;
     cout << "Masukkan IP address yang ingin dicari: ";
     cin >> ip;
@@ -712,7 +706,7 @@ void searchIP(Router* router, HashTable& hashTable) {
         cout << "Tipe       : " << router->device_info->device_type << endl;
         cout << "Gateway    : " << router->device_info->gateway << endl;
     } else {
-        PC* pc = findPC(router, ip, switchIndex, hashTable);
+        PC* pc = cariPerangkatPC(router, ip, switchIndex, hashTable);
         if (pc != nullptr) {
             cout << "IP Address : " << pc->device_info->ip_address << endl;
             cout << "Status     : " << pc->device_info->status << endl;
@@ -723,9 +717,9 @@ void searchIP(Router* router, HashTable& hashTable) {
             cout << "Terkoneksi dengan Switch: " << switchIndex + 1 << endl;
             cout << "Terkoneksi dengan Router: " << router->ip_address << endl;
             cout << "Paket yang diterima:" << endl;
-            pc->displayReceivedPackets();
+            pc->displayPaketYangDiterima();
             cout << "IP yang diblokir:" << endl;
-            pc->displayBlockedIPs();
+            pc->displayIPAddressBlokiran();
         } else {
             cout << "Tidak ada perangkat dengan IP address " << ip << endl;
         }
@@ -734,7 +728,7 @@ void searchIP(Router* router, HashTable& hashTable) {
 
 
 // Fungsi untuk memproses paket
-void processPackets(Queue& packetQueue, Stack& logStack, Router* router, HashTable& hashTable) {
+void prosessPaketAntrian(Queue& packetQueue, Stack& logStack, Router* router, HashTable& hashTable) {
     while (!packetQueue.isEmpty()) {
         Packet* packet = packetQueue.dequeue();
         if (packet != nullptr) {
@@ -747,9 +741,9 @@ void processPackets(Queue& packetQueue, Stack& logStack, Router* router, HashTab
                 cin >> decision;
                 if (decision == 'Y' || decision == 'y') {
                     int switchIndex = -1;
-                    PC* destPC = findPC(router, packet->destination_ip, switchIndex, hashTable);
+                    PC* destPC = cariPerangkatPC(router, packet->destination_ip, switchIndex, hashTable);
                     if (destPC && destPC->device_info->status == "active" && !destPC->isBlocked(packet->source_ip)) {
-                        destPC->receivePacket(packet);
+                        destPC->menerimaPacket(packet);
                         bandwidthTable.addUsage(packet->source_ip, packet->message.size(), true);
                         bandwidthTable.addUsage(packet->destination_ip, packet->message.size(), false);
                         logStack.push("Paket dari " + packet->source_ip + " ke " + packet->destination_ip + " diterima.");
@@ -769,7 +763,7 @@ void processPackets(Queue& packetQueue, Stack& logStack, Router* router, HashTab
 // Fungsi untuk melakukan ping
 void pingRouter(const string& source_ip, Router* router, Stack& logStack, HashTable& hashTable) {
     int switchIndex = -1;
-    PC* pc = findPC(router, source_ip, switchIndex, hashTable);
+    PC* pc = cariPerangkatPC(router, source_ip, switchIndex, hashTable);
     if (pc == nullptr || pc->device_info->status == "inactive" || pc->device_info->gateway != router->ip_address) {
         cout << "PC dengan IP " << source_ip << " tidak terhubung atau gateway tidak sesuai, tidak dapat melakukan ping ke router." << endl;
         logStack.push("Ping dari IP " + source_ip + " ke router " + router->ip_address + " gagal, PC tidak terhubung atau gateway tidak sesuai.");
@@ -781,7 +775,6 @@ void pingRouter(const string& source_ip, Router* router, Stack& logStack, HashTa
     logStack.push("Pinging router " + router->ip_address + " from IP " + source_ip);
     
     int times[4];  // Array untuk menyimpan waktu round-trip setiap ping
-    
     for (int i = 0; i < 4; ++i) {
         int time = rand() % 100 + 1;  // Generate random round-trip time between 1ms and 100ms
         times[i] = time;  // Simpan waktu ping ke array
@@ -803,9 +796,8 @@ void pingRouter(const string& source_ip, Router* router, Stack& logStack, HashTa
         }
         sumTime += times[i];
     }
-    
     int avgTime = sumTime / 4;
-    
+    // tampilan ping
     cout << endl << "Ping statistics for router " << router->ip_address << ":" << endl;
     cout << "    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss)," << endl;
     cout << "Approximate round trip times in milli-seconds:" << endl;
@@ -815,7 +807,7 @@ void pingRouter(const string& source_ip, Router* router, Stack& logStack, HashTa
 }
 
 // ubah IP address perangkat
-void changeDeviceIP(HashTable& hashTable, PC* pc, const string& new_ip, Stack& logStack, AdjacencyList& adjList) {
+void changeDeviceIP(HashTable& hashTable, PC* pc, const string& new_ip, Stack& logStack, userPCIPList& adjList) {
     if (hashTable.search(new_ip) != nullptr) {
         cout << "IP address " << new_ip << " sudah digunakan di jaringan. Tidak dapat mengubah IP address." << endl;
         logStack.push("Gagal mengubah IP address PC dengan IP " + pc->device_info->ip_address + " menjadi " + new_ip + ". IP address sudah digunakan.");
@@ -843,7 +835,7 @@ void changeDeviceGateway(PC* pc, const string& new_gateway, const string& router
 }
 
 // Fungsi untuk mengubah IP address router dan memperbarui gateway perangkat yang terhubung
-void changeRouterIP(Router* router, const string& new_ip, HashTable& hashTable, Stack& logStack, AdjacencyList& adjList) {
+void changeRouterIP(Router* router, const string& new_ip, HashTable& hashTable, Stack& logStack, userPCIPList& adjList) {
     string old_ip = router->ip_address;
     router->device_info->ip_address = new_ip;
     router->ip_address = new_ip;
@@ -852,7 +844,6 @@ void changeRouterIP(Router* router, const string& new_ip, HashTable& hashTable, 
 
     // Perbarui hash table
     hashTable.updateRouterIP(old_ip, new_ip);
-
     // Perbarui adjacency list
     adjList.addEdge(new_ip, old_ip, "Router");
 
@@ -874,18 +865,18 @@ void changeRouterIP(Router* router, const string& new_ip, HashTable& hashTable, 
     }
 }
 
-// menampilkan tree topology network
-void displayTree(TreeNode* node, int level = 0) {
+// menampilkan konsep tree topology network antar perangkat
+void displayTopologiJaringan(TreeNode* node, int level = 0) {
     if (node == nullptr) return;
     for (int i = 0; i < level; ++i) cout << "  ";
     cout << node->device_info->device_type << " IP: " << node->device_info->ip_address << " Status: " << node->device_info->status << endl;
     for (int i = 0; i < node->childCount; ++i) {
-        displayTree(node->children[i], level + 1);
+        displayTopologiJaringan(node->children[i], level + 1);
     }
 }
 
-// update tree topology network
-void updateTree(TreeNode* root, Router* router) {
+// update konsep tree topologi jaringan
+void updateTopologiJaringan(TreeNode* root, Router* router) {
     root->childCount = 0; // Reset children count
     for (int i = 0; i < 2; ++i) {
         if (router->switches[i] != nullptr) {
@@ -902,9 +893,9 @@ void updateTree(TreeNode* root, Router* router) {
 }
 
 // Fungsi untuk simulasi serangan DDoS
-void simulateDDoSAttack(Router* router, const string& target_ip, int packetCount, Queue& packetQueue, Stack& logStack, HashTable& hashTable) {
+void simulasiSeranganDDoS(Router* router, const string& target_ip, int packetCount, Queue& packetQueue, Stack& logStack, HashTable& hashTable) {
     int switchIndex = -1;
-    PC* targetPC = findPC(router, target_ip, switchIndex, hashTable);
+    PC* targetPC = cariPerangkatPC(router, target_ip, switchIndex, hashTable);
     
     if (!targetPC || targetPC->device_info->status == "inactive") {
         cout << "PC dengan IP " << target_ip << " tidak ditemukan atau sedang mati." << endl;
@@ -925,7 +916,7 @@ void simulateDDoSAttack(Router* router, const string& target_ip, int packetCount
 
         // Jika PC target masih aktif, tambahkan paket DDoS ke PC target
         if (targetPC->device_info->status == "active") {
-            targetPC->receivePacket(packet);
+            targetPC->menerimaPacket(packet);
         }
     }
 
@@ -933,10 +924,10 @@ void simulateDDoSAttack(Router* router, const string& target_ip, int packetCount
 }
 
 // Fungsi untuk mitigasi serangan DDoS
-void mitigateDDoSAttack(Router* router, const string& target_ip, Stack& logStack, HashTable& hashTable) {
+void mitigasiSeranganDDoS(Router* router, const string& target_ip, Stack& logStack, HashTable& hashTable) {
     if (router->device_info->ip_address == target_ip) {
         if (router->device_info->status == "active") {
-            router->shutdownDevice();
+            router->matikanPerangkat();
             logStack.push("Mitigasi serangan DDoS: Router dengan IP " + target_ip + " dimatikan untuk mencegah kerusakan lebih lanjut.");
             cout << "Router dengan IP " << target_ip << " berhasil dimatikan." << endl;
         } else {
@@ -945,9 +936,9 @@ void mitigateDDoSAttack(Router* router, const string& target_ip, Stack& logStack
         }
     } else {
         int switchIndex = -1;
-        PC* targetPC = findPC(router, target_ip, switchIndex, hashTable);
+        PC* targetPC = cariPerangkatPC(router, target_ip, switchIndex, hashTable);
         if (targetPC && targetPC->device_info->status == "active") {
-            targetPC->shutdownDevice();
+            targetPC->matikanPerangkat();
             logStack.push("Mitigasi serangan DDoS: PC dengan IP " + target_ip + " dimatikan untuk mencegah kerusakan lebih lanjut.");
             cout << "PC dengan IP " + target_ip << " berhasil dimatikan." << endl;
         } else {
@@ -960,9 +951,9 @@ void mitigateDDoSAttack(Router* router, const string& target_ip, Stack& logStack
     for (int i = 0; i < 10; ++i) {
         string source_ip = "192.168.1." + to_string(i + 20);
         int sourceSwitchIndex = -1;
-        PC* sourcePC = findPC(router, source_ip, sourceSwitchIndex, hashTable);
+        PC* sourcePC = cariPerangkatPC(router, source_ip, sourceSwitchIndex, hashTable);
         if (sourcePC && sourcePC->device_info->status == "active") {
-            sourcePC->shutdownDevice();
+            sourcePC->matikanPerangkat();
             logStack.push("Sumber serangan DDoS: PC dengan IP " + source_ip + " dimatikan.");
             cout << "PC dengan IP " + source_ip << " berhasil dimatikan." << endl;
         }
@@ -970,16 +961,16 @@ void mitigateDDoSAttack(Router* router, const string& target_ip, Stack& logStack
 }
 
 // Fungsi untuk menyalakan perangkat
-void restartDevice(HashTable& hashTable, Router* router, const string& ip, Stack& logStack) {
+void mulaiUlangPerangkat(HashTable& hashTable, Router* router, const string& ip, Stack& logStack) {
     if (router->device_info->ip_address == ip) {
-        router->restartDevice();
+        router->mulaiUlangPerangkat();
         logStack.push("Perangkat router dengan IP " + ip + " berhasil dinyalakan.");
         cout << "Router dengan IP " + ip + " berhasil dinyalakan." << endl;
     } else {
         int switchIndex = -1;
-        PC* pc = findPC(router, ip, switchIndex, hashTable);
+        PC* pc = cariPerangkatPC(router, ip, switchIndex, hashTable);
         if (pc != nullptr) {
-            pc->restartDevice();
+            pc->mulaiUlangPerangkat();
             logStack.push("Perangkat PC dengan IP " + ip + " berhasil dinyalakan.");
             cout << "PC dengan IP " + ip << " berhasil dinyalakan." << endl;
         } else {
@@ -989,16 +980,16 @@ void restartDevice(HashTable& hashTable, Router* router, const string& ip, Stack
     }
 }
 
-void shutdownDevice(HashTable& hashTable, Router* router, const string& ip, Stack& logStack) {
+void matikanPerangkat(HashTable& hashTable, Router* router, const string& ip, Stack& logStack) {
     if (router->device_info->ip_address == ip) {
-        router->shutdownDevice();
+        router->matikanPerangkat();
         logStack.push("Perangkat router dengan IP " + ip + " berhasil dimatikan.");
         cout << "Router dengan IP " + ip + " berhasil dimatikan." << endl;
     } else {
         int switchIndex = -1;
-        PC* pc = findPC(router, ip, switchIndex, hashTable);
+        PC* pc = cariPerangkatPC(router, ip, switchIndex, hashTable);
         if (pc != nullptr) {
-            pc->shutdownDevice();
+            pc->matikanPerangkat();
             logStack.push("Perangkat PC dengan IP " + ip + " berhasil dimatikan.");
             cout << "PC dengan IP " + ip << " berhasil dimatikan." << endl;
         } else {
@@ -1009,7 +1000,7 @@ void shutdownDevice(HashTable& hashTable, Router* router, const string& ip, Stac
 }
 
 // Fungsi untuk memblokir IP address
-void blockIPAddress(PC* pc) {
+void blokirIPAddress(PC* pc) {
     string ip;
     cout << "Masukkan IP address yang ingin diblokir: ";
     cin >> ip;
@@ -1018,7 +1009,7 @@ void blockIPAddress(PC* pc) {
 }
 
 // Fungsi untuk menghapus blokiran IP address
-void unblockIPAddress(PC* pc) {
+void hapusBlokiranIPAddress(PC* pc) {
     string ip;
     cout << "Masukkan IP address yang ingin dihapus dari blokiran: ";
     cin >> ip;
@@ -1026,13 +1017,13 @@ void unblockIPAddress(PC* pc) {
 }
 
 // Fungsi untuk menampilkan IP address yang diblokir
-void displayBlockedIPs(PC* pc) {
+void displayIPAddressBlokiran(PC* pc) {
     cout << "IP address yang diblokir:" << endl;
-    pc->displayBlockedIPs();
+    pc->displayIPAddressBlokiran();
 }
 
 // Menu untuk simulasi jaringan sebagai administrator jaringan
-bool adminMenu(Router* router, Stack& logStack, Queue& packetQueue, HashTable& hashTable, TreeNode* root, AdjacencyList& adjList) {
+bool menuSimulasiAdmin(Router* router, Stack& logStack, Queue& packetQueue, HashTable& hashTable, TreeNode* root, userPCIPList& adjList) {
     int choice;
     do {
         system("cls");
@@ -1076,11 +1067,11 @@ bool adminMenu(Router* router, Stack& logStack, Queue& packetQueue, HashTable& h
                             cout << "Masukkan Gateway: ";
                             cin >> gateway;
                             if (router->switches[switchIndex] != nullptr && router->switches[switchIndex]->users[pcIndex] == nullptr) {
-                                addPC(router->switches[switchIndex], pcIndex, ip, username, password, gateway, router->ip_address, logStack, hashTable, adjList);
+                                tambahPC(router->switches[switchIndex], pcIndex, ip, username, password, gateway, router->ip_address, logStack, hashTable, adjList);
                             } else {
                                 cout << "Invalid Switch/PC Index atau sudah ada PC yang tersambung dengan socket.\n";
                             }
-                            updateTree(root, router);
+                            updateTopologiJaringan(root, router);
                             system("pause");
                             break;
                         }
@@ -1095,7 +1086,7 @@ bool adminMenu(Router* router, Stack& logStack, Queue& packetQueue, HashTable& h
                             } else {
                                 cout << "Invalid Switch Index.\n";
                             }
-                            updateTree(root, router);
+                            updateTopologiJaringan(root, router);
                             system("pause");
                             break;
                         }
@@ -1108,7 +1099,7 @@ bool adminMenu(Router* router, Stack& logStack, Queue& packetQueue, HashTable& h
                                 cout << "Masukkan IP address perangkat PC: ";
                                 cin >> ip;
                                 int switchIndex = -1;
-                                PC* pc = findPC(router, ip, switchIndex, hashTable);
+                                PC* pc = cariPerangkatPC(router, ip, switchIndex, hashTable);
                                 if (pc != nullptr) {
                                     int pilihKonfigurasi;
                                     cout << "Pilih konfigurasi untuk diubah:\n1. IP Address\n2. Gateway\n>> ";
@@ -1171,7 +1162,7 @@ bool adminMenu(Router* router, Stack& logStack, Queue& packetQueue, HashTable& h
                             } else {
                                 cout << "Pilihan tidak valid.\n";
                             }
-                            updateTree(root, router);
+                            updateTopologiJaringan(root, router);
                             system("pause");
                             break;
                         }
@@ -1183,9 +1174,9 @@ bool adminMenu(Router* router, Stack& logStack, Queue& packetQueue, HashTable& h
                             int action;
                             cin >> action;
                             if (action == 1) {
-                                restartDevice(hashTable, router, ip, logStack);
+                                mulaiUlangPerangkat(hashTable, router, ip, logStack);
                             } else if (action == 2) {
-                                shutdownDevice(hashTable, router, ip, logStack);
+                                matikanPerangkat(hashTable, router, ip, logStack);
                             } else {
                                 cout << "Pilihan tidak valid.\n";
                             }
@@ -1216,23 +1207,23 @@ bool adminMenu(Router* router, Stack& logStack, Queue& packetQueue, HashTable& h
 
                     switch(pilihMonitoring) {
                         case 1:
-                            displayTree(root);
+                            displayTopologiJaringan(root);
                             system("pause");
                             break;
                         case 2:
-                            displayLogsStack(logStack);
+                            displayLogsJaringan(logStack);
                             system("pause");
                             break;
                         case 3:
-                            searchIP(router, hashTable);
+                            cariIP(router, hashTable);
                             system("pause");
                             break;
                         case 4:
-                            bandwidthTable.displayUsage();
+                            bandwidthTable.displayPenggunaanBandwidth();
                             system("pause");
                             break;
                         case 5:
-                            adjList.displayAdjacencyList();
+                            adjList.ipUserTerhubung();
                             system("pause");
                             break;
                         case 0:
@@ -1245,7 +1236,7 @@ bool adminMenu(Router* router, Stack& logStack, Queue& packetQueue, HashTable& h
             }
             case 3: { // Proses Paket
                 system("cls");
-                processPackets(packetQueue, logStack, router, hashTable);
+                prosessPaketAntrian(packetQueue, logStack, router, hashTable);
                 system("pause");
                 break;
             }
@@ -1268,7 +1259,7 @@ bool adminMenu(Router* router, Stack& logStack, Queue& packetQueue, HashTable& h
                             cin >> target_ip;
                             cout << "Masukkan jumlah paket: ";
                             cin >> packetCount;
-                            simulateDDoSAttack(router, target_ip, packetCount, packetQueue, logStack, hashTable);
+                            simulasiSeranganDDoS(router, target_ip, packetCount, packetQueue, logStack, hashTable);
                             system("pause");
                             break;
                         }
@@ -1276,7 +1267,7 @@ bool adminMenu(Router* router, Stack& logStack, Queue& packetQueue, HashTable& h
                             string target_ip;
                             cout << "Masukkan IP address target yang ingin dimitigasi: ";
                             cin >> target_ip;
-                            mitigateDDoSAttack(router, target_ip, logStack, hashTable);
+                            mitigasiSeranganDDoS(router, target_ip, logStack, hashTable);
                             system("pause");
                             break;
                         }
@@ -1298,7 +1289,7 @@ bool adminMenu(Router* router, Stack& logStack, Queue& packetQueue, HashTable& h
 }
 
 // Menu simulasi jaringan sebagai user
-bool userMenu(Router* router, Queue& packetQueue, Stack& logStack, HashTable& hashTable) {
+bool menuSimulasiUser(Router* router, Queue& packetQueue, Stack& logStack, HashTable& hashTable) {
     system("cls");
     string username, password;
     cout << "Masukkan username anda: ";
@@ -1306,10 +1297,10 @@ bool userMenu(Router* router, Queue& packetQueue, Stack& logStack, HashTable& ha
     cout << "Masukkan password anda: ";
     cin >> password;
 
-    HashNode* userNode = hashTable.searchUser(username);
+    HashNode* userNode = hashTable.cariUser(username);
     if (userNode != nullptr && userNode->password == password && !userNode->isAdmin) {
         PC* pc = userNode->pc;
-        logStack.push("User " + username + " logged in from IP " + pc->device_info->ip_address);
+        logStack.push("User " + username + " terhubung dari perangkat IP " + pc->device_info->ip_address);
         int choice;
         do {
             system("cls");
@@ -1346,8 +1337,8 @@ bool userMenu(Router* router, Queue& packetQueue, Stack& logStack, HashTable& ha
                 }
                 case 2:
                     cout << "Paket yang diterima:" << endl;
-                    pc->sortPacketsByIP();
-                    pc->displayReceivedPackets();
+                    pc->urutkanPacketsBerdasarkanIP();
+                    pc->displayPaketYangDiterima();
                     system("pause");
                     break;
                 case 3:
@@ -1373,11 +1364,11 @@ bool userMenu(Router* router, Queue& packetQueue, Stack& logStack, HashTable& ha
                     int action;
                     cin >> action;
                     if (action == 1) {
-                        pc->shutdownDevice();
+                        pc->matikanPerangkat();
                         logStack.push("User " + username + " mematikan perangkat dengan IP " + pc->device_info->ip_address);
                         cout << "Perangkat dengan IP " << pc->device_info->ip_address << " berhasil dimatikan." << endl;
                     } else if (action == 2) {
-                        pc->restartDevice();
+                        pc->mulaiUlangPerangkat();
                         logStack.push("User " + username + " menyalakan ulang perangkat dengan IP " + pc->device_info->ip_address);
                         cout << "Perangkat dengan IP " + pc->device_info->ip_address << " berhasil dinyalakan ulang." << endl;
                     } else {
@@ -1387,24 +1378,24 @@ bool userMenu(Router* router, Queue& packetQueue, Stack& logStack, HashTable& ha
                     break;
                 }
                 case 6: {
-                    blockIPAddress(pc);
+                    blokirIPAddress(pc);
                     logStack.push("User " + username + " memblokir IP address dari IP " + pc->device_info->ip_address);
                     system("pause");
                     break;
                 }
                 case 7: {
-                    unblockIPAddress(pc);
+                    hapusBlokiranIPAddress(pc);
                     logStack.push("User " + username + " menghapus blokiran IP address dari IP " + pc->device_info->ip_address);
                     system("pause");
                     break;
                 }
                 case 8: {
-                    displayBlockedIPs(pc);
+                    displayIPAddressBlokiran(pc);
                     system("pause");
                     break;
                 }
                 case 0:
-                    logStack.push("User " + username + " logged out from IP " + pc->device_info->ip_address);
+                    logStack.push("User " + username + " logged out dari perangkat IP " + pc->device_info->ip_address);
                     return false;
                 default:
                     cout << "Input tidak valid!\n";
@@ -1421,29 +1412,26 @@ bool userMenu(Router* router, Queue& packetQueue, Stack& logStack, HashTable& ha
 // int main program
 int main() {
     Router* router = new Router("192.168.1.1"); // IP address router
-    Stack logStack;
-    Queue packetQueue;
-    HashTable hashTable;
-    AdjacencyList adjList;
+    Stack logStack; Queue packetQueue;
+    HashTable hashTable; userPCIPList adjList;
 
-    // Tambahkan admin ke hash table
+    // admin insert ke hash table
     hashTable.insert(router->ip_address, nullptr, "admin", "admin", true);
 
     // inisialiasi switch 1 dan 2 langsung
-    addSwitch(router, 0, "192.168.1.100", logStack);
-    addSwitch(router, 1, "192.168.2.100", logStack);
-
+    tambahSwitch(router, 0, "192.168.1.100", logStack);
+    tambahSwitch(router, 1, "192.168.2.100", logStack);
     // tambah pc ke switch -> router // switch 1
-    addPC(router->switches[0], 0, "192.168.1.2", "user1", "pass1", "192.168.1.1", router->ip_address, logStack, hashTable, adjList);
-    addPC(router->switches[0], 1, "192.168.1.3", "user2", "pass2", "192.168.1.1", router->ip_address, logStack, hashTable, adjList);
-    addPC(router->switches[0], 2, "192.168.1.4", "user3", "pass3", "192.168.1.1", router->ip_address, logStack, hashTable, adjList);
+    tambahPC(router->switches[0], 0, "192.168.1.2", "user1", "pass1", "192.168.1.1", router->ip_address, logStack, hashTable, adjList);
+    tambahPC(router->switches[0], 1, "192.168.1.3", "user2", "pass2", "192.168.1.1", router->ip_address, logStack, hashTable, adjList);
+    tambahPC(router->switches[0], 2, "192.168.1.4", "user3", "pass3", "192.168.1.1", router->ip_address, logStack, hashTable, adjList);
     // switch 2
-    addPC(router->switches[1], 0, "192.168.2.5", "user4", "pass4", "192.168.1.1", router->ip_address, logStack, hashTable, adjList);
-    addPC(router->switches[1], 1, "192.168.2.6", "user5", "pass5", "192.168.1.1", router->ip_address, logStack, hashTable, adjList);
-    addPC(router->switches[1], 2, "192.168.2.7", "user6", "pass6", "192.168.1.1", router->ip_address, logStack, hashTable, adjList);
+    tambahPC(router->switches[1], 0, "192.168.2.5", "user4", "pass4", "192.168.1.1", router->ip_address, logStack, hashTable, adjList);
+    tambahPC(router->switches[1], 1, "192.168.2.6", "user5", "pass5", "192.168.1.1", router->ip_address, logStack, hashTable, adjList);
+    tambahPC(router->switches[1], 2, "192.168.2.7", "user6", "pass6", "192.168.1.1", router->ip_address, logStack, hashTable, adjList);
 
     TreeNode* root = new TreeNode(router->device_info);
-    updateTree(root, router);
+    updateTopologiJaringan(root, router);
 
     while (true) {
         int userType;
@@ -1467,10 +1455,10 @@ int main() {
             string password;
             cin >> password;
 
-            HashNode* adminNode = hashTable.searchUser(username);
+            HashNode* adminNode = hashTable.cariUser(username);
             if (adminNode != nullptr && adminNode->password == password && adminNode->isAdmin) {
                 logStack.push("Admin logged in.");
-                if (!adminMenu(router, logStack, packetQueue, hashTable, root, adjList)) { // menu admin
+                if (!menuSimulasiAdmin(router, logStack, packetQueue, hashTable, root, adjList)) { // menu admin
                     continue;  // ini untuk kembali ke menu login
                 }
             } else {
@@ -1479,9 +1467,9 @@ int main() {
                 system("pause");
             }
         } else if (userType == 2) {
-            userMenu(router, packetQueue, logStack, hashTable); // menu user
+            menuSimulasiUser(router, packetQueue, logStack, hashTable); // menu user
         } else if (userType == 3) {
-            displayTree(root); // tree topologi
+            displayTopologiJaringan(root); // tree topologi
             system("pause");
         } else if (userType == 0) {
             break;
@@ -1501,6 +1489,7 @@ int main() {
         delete router->switches[i]->device_info;
         delete router->switches[i];
     }
+
     delete router->device_info;
     delete router;
 
@@ -1513,7 +1502,6 @@ int main() {
         Packet* temp = packetQueue.dequeue();
         delete temp;
     }
-
     return 0;
 }
 
