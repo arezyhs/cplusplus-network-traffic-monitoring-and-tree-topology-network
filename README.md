@@ -59,5 +59,6 @@ The program logs all significant events and actions, including device status cha
 - Use the menu to send/receive packets, ping the router, and manage the PC.
 
 ## File Structure
-- `network_simulation.cpp`: Main program source file.
-- `network_logs.txt`: Log file storing network events.
+- `networkTrafficMonitoringSimulation.cpp`: this one implement graph structure, a bit fragile. 
+- `networkTrafficMonitoringSimulationTanpaGraf.cpp`: This one without implementation of graph structure, more stable. 
+- `network_logs.txt`: Log file to store network events.
