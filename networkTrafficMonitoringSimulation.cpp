@@ -9,7 +9,7 @@
 #include <iomanip> // std::put_time, format waktu jadi string
 using namespace std;
 
-// arezyh.s
+// arezyh.s // shylniac // nofiayuwulandari
 
 // menyimpan pesan logging
 struct Log {
@@ -1517,4 +1517,4 @@ int main() {
     return 0;
 }
 
-// arezyh.s
+// arezyh.s // shylniac // nofiayuwulandari
